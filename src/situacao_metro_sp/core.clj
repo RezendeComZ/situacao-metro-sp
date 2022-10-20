@@ -1,6 +1,7 @@
 (ns situacao-metro-sp.core
   (:require [clj-http.client :as http]
             [cheshire.core :as json]
+            [clojure.string :as string]
             [hickory.core :as html]))
 
 (def VIAQUATRO-URL "https://www.viaquatro.com.br/generic/Main/LineStatus")
@@ -11,15 +12,25 @@
         body    (:body content)]
     (json/parse-string body true)))
 
+;; CPTM
 
-(def mapa-cptm
+(def vetor-html-cptm ;; TODO: try and catch
   (let [content (http/get CPTM-URL)
         body    (:body content)
-        parse   (html/as-hiccup (html/parse body))
-        cptm    (vec parse)]
-    ;; ! Ainda não fechou no escopo da situação das linhas. E ver outra forma de não ficar repetindo o nth, talvez um thread da vida? Ou localizando por string
-    ;; ! flattern e "find"?
-    (nth (nth (nth (nth (nth (nth (second cptm) 4) 3) 17) 5) 7) 3)))
+        parse   (html/as-hiccup (html/parse body))]
+    (flatten (vec parse))))
+
+(defn situacao-linha-cptm [linha]
+  (nth vetor-html-cptm (+ (.indexOf vetor-html-cptm linha) 3)))
+
+(defn mapa-unica-linha-cptm [linha]
+  {(keyword (string/lower-case linha)) {:nome linha
+                                        :situacao (situacao-linha-cptm linha)}})
+
+(def mapa-todas-linhas-cptm
+  (merge (map mapa-unica-linha-cptm ["CORAL" "RUBI" "TURQUESA"
+                                     "SAFIRA" "JADE" "LILÁS"
+                                     "DIAMANTE" "ESMERALDA"])))
 
 (defn -main
   [& args]
@@ -27,4 +38,5 @@
   (prn mapa-via-quatro)
 
   (prn "CPTM:")
-  (prn mapa-cptm))
+  (prn mapa-todas-linhas-cptm))
+
