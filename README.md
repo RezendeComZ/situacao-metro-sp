@@ -1,9 +1,13 @@
 # situacao-metro-sp
 
-Alimenta tópicos no Kafka sobre a situação das linhas do metrô de SP.
+Alimentará tópicos no Kafka sobre a situação das linhas do metrô de SP.
 
-Terá inicialmente ao menos dois tópicos:
+Terá os seguintes tópicos:
 
-* Geral - Inclui todos os status de todas as linhas.
+* Geral - Inclui todos os status de todas as empresas.
 
-* Incidentes. Tudo que não é "Operação Normal".
+* CPTM - Inclui todos os status de todas as linhas da CPTM.
+
+* Metrô - Inclui todos os status de todas as linhas da CPTM.
+
+* Incidentes . Tudo que não é "Operação Normal".
