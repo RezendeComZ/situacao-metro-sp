@@ -3,8 +3,6 @@
             [clojure.string :as string]
             [hickory.core :as html]))
 
-
-
 (def CPTM-URL      "https://www.cptm.sp.gov.br")
 (def LINHAS-CPTM [{:nome "LILÁS"
                    :numero 5}
@@ -23,7 +21,6 @@
                   {:nome "JADE"
                    :numero 13}])
 
-
 (def vetor-html-cptm
   (try
     (let [content (http/get CPTM-URL)
@@ -31,20 +28,28 @@
           parse   (html/as-hiccup (html/parse body))]
       (flatten (vec parse)))
     (catch Exception e
-      (str "Erro ao capturar dados da CPTM: " e))))
+      (prn "@@@@ " (type e))
+      (let [msg-erro {:msg-erro (str "Erro ao capturar HTML: " e)}]
+        (prn msg-erro)
+        msg-erro))))
 
 (defn situacao-linha-cptm [linha]
   (try
     (nth vetor-html-cptm (+ (.indexOf vetor-html-cptm linha) 3))
     (catch Exception e
-      (str "Erro ao converter o HTML da CPTM: " e))))
+      (let [msg-erro {:msg-erro (str "Erro ao converter o HTML da CPTM: " e)}]
+        (prn msg-erro)
+        msg-erro))))
 
 (defn mapa-unica-linha-cptm [linha]
-  (let [nome           (:nome linha)
-        nome-lowercase (string/lower-case nome)]
+  (let [nome                (:nome linha)
+        nome-lowercase      (string/lower-case nome)
+        situacao-linha-cptm (situacao-linha-cptm nome)]
     {:nome     (str (first nome) (apply str (rest nome-lowercase)))
      :numero   (:numero linha)
-     :situacao (situacao-linha-cptm nome)}))
+     :situacao (if (:msg-erro situacao-linha-cptm)
+                 "Erro ao obter status da linha"
+                 situacao-linha-cptm)}))
 
 (def mapa-todas-linhas-cptm
   (merge (map mapa-unica-linha-cptm LINHAS-CPTM)))
